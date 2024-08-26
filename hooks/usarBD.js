@@ -51,7 +51,7 @@ export function usarBD() {
             throw error;
         }
     }
-
+    
     async function remove(id) {
         try {
             await bd.execAsync("DELETE FROM produtos WHERE id = " + id);
