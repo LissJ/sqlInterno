@@ -1,4 +1,4 @@
-import { View, StyleSheet, TextInput, Alert, FlatList, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, FlatList, Image, Text, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { usarBD } from './hooks/usarBD';
 import { Produto } from './components/produto';
@@ -6,7 +6,7 @@ import { useFonts } from 'expo-font';
 import AppLoading from 'expo-app-loading';
 import * as SplashScreen from 'expo-splash-screen';
 
-SplashScreen.preventAutoHideAsync(); //Mantem a tela SplashScreen
+SplashScreen.preventAutoHideAsync(); // Mantém a tela SplashScreen
 
 export function Index() {
     const [fontsLoaded] = useFonts({
@@ -39,10 +39,23 @@ export function Index() {
 
     const produtosBD = usarBD();
 
+    const formatText = (text) => {
+        // Converte a primeira letra para maiúscula
+        const formattedText = text.charAt(0).toUpperCase() + text.slice(1);
+
+        // Limita o comprimento do texto a 12 caracteres
+        return formattedText.length > 18 ? formattedText.slice(0, 18) + '...' : formattedText;
+    };
+
     async function create() {
+        if (!nome || !quantidade) {
+            return Alert.alert('Grocery', 'É necessário adicionar valores nos campos de nome e quantidade!');
+        }
+
         if (isNaN(quantidade)) {
             return Alert.alert('Quantidade', 'A quantidade precisa ser um número!');
         }
+
         try {
             const item = await produtosBD.create({
                 nome,
@@ -57,9 +70,14 @@ export function Index() {
     }
 
     async function update() {
+        if (!nome || !quantidade) {
+            return Alert.alert('Grocery', 'É necessário adicionar valores nos campos de Nome e Quantidade!');
+        }
+
         if (isNaN(quantidade)) {
             return Alert.alert('Quantidade', 'A quantidade precisa ser um número!');
         }
+
         try {
             await produtosBD.update(id, {
                 nome,
@@ -86,16 +104,33 @@ export function Index() {
     }
 
     async function remove(id) {
-        try {
-            await produtosBD.remove(id);
-            setId('');
-            setNome('');
-            setQuantidade('');
-            setSelectedId(null);
-            listar();
-        } catch (error) {
-            console.log(error);
-        }
+        Alert.alert(
+            'Confirmação',
+            'Você tem certeza que deseja deletar este item?',
+            [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Deletar',
+                    onPress: async () => {
+                        try {
+                            await produtosBD.remove(id);
+                            setId('');
+                            setNome('');
+                            setQuantidade('');
+                            setSelectedId(null);
+                            listar();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    },
+                    style: 'destructive',
+                },
+            ],
+            { cancelable: true }
+        );
     }
 
     const handleSelect = (item) => {
@@ -120,81 +155,84 @@ export function Index() {
     }
 
     return (
-        <FlatList
-            contentContainerStyle={styles.listContent}
-            ListHeaderComponent={() => (
-                <View style={styles.container}>
-                    <View style={styles.headerGrocery}>
-                        <Image style={styles.iconGrocery} source={require('./assets/groceryicon.png')}></Image>
-                        <Text style={styles.tituloGrocery}>
-                            Grocery
-                        </Text>
-                    </View>
-                    <View style={styles.bemVindo}>
-                        <Text style={styles.olaUsuario}>
-                            <Text style={styles.ola}>
-                                Olá
-                            </Text>
-                            <Text style={styles.usuario}>
-                                , usuário!
-                            </Text>
-                        </Text>
-                        <Text style={styles.adicione}>
-                            Adicione seus itens aqui.
-                        </Text>
-                    </View>
-
-                    <View style={styles.mainBranco}>
-                        <View style={styles.adicionar}>
-                            <Text style={styles.addItem}>
-                                + Adicionar item
-                            </Text>
-                        </View>
-
-                        <TextInput
-                            style={[styles.input, styles.textInputFont]}
-                            placeholder="Nome"
-                            onChangeText={setNome}
-                            placeholderTextColor={'#fff'}
-                            value={nome}
-                        />
-                        <TextInput
-                            style={[styles.input, styles.textInputFont]}
-                            placeholder="Quantidade"
-                            onChangeText={setQuantidade}
-                            value={quantidade}
-                            placeholderTextColor={'#fff'}
-                            keyboardType="numeric"
-                        />
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity style={styles.limparButton} onPress={() => { setId(''); setNome(''); setQuantidade(''); setSelectedId(null); }}>
-                                <Text style={styles.buttonText}>Limpar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.salvarButton} onPress={id ? update : create}>
-                                <Text style={styles.buttonText}>{id ? "Atualizar" : "Salvar"}</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.linha}></View>
-                        <TextInput
-                            style={[styles.pesquisaInput, styles.textInputFontPesquisa]}
-                            placeholder="Pesquisar..."
-                            onChangeText={setPesquisa}
-                        />
-                    </View>
+        <ScrollView>
+            <View style={styles.container}>
+                <View style={styles.headerGrocery}>
+                    <Image style={styles.iconGrocery} source={require('./assets/groceryicon.png')}></Image>
+                    <Text style={styles.tituloGrocery}>
+                        Grocery
+                    </Text>
                 </View>
-            )}
-            data={produtos}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={({ item }) => (
-                <Produto
-                    data={item}
-                    onDelete={() => remove(item.id)}
-                    selected={item.id === selectedId}
-                    onPress={() => handleSelect(item)}
-                />
-            )}
-            ListFooterComponent={<View style={{ height: 20 }} />} // Adiciona um espaçamento no final
-        />
+                <View style={styles.bemVindo}>
+                    <Text style={styles.olaUsuario}>
+                        <Text style={styles.ola}>
+                            Olá
+                        </Text>
+                        <Text style={styles.usuario}>
+                            , usuário!
+                        </Text>
+                    </Text>
+                    <Text style={styles.adicione}>
+                        Adicione seus itens aqui.
+                    </Text>
+                </View>
+
+                <View style={styles.mainBranco}>
+                    <View style={styles.adicionar}>
+                        <Text style={styles.addItem}>
+                            + Adicionar item
+                        </Text>
+                    </View>
+
+                    <TextInput
+                        style={[styles.input, styles.textInputFont]}
+                        placeholder="Nome"
+                        onChangeText={setNome}
+                        placeholderTextColor={'#fff'}
+                        value={nome}
+                    />
+                    <TextInput
+                        style={[styles.input, styles.textInputFont]}
+                        placeholder="Quantidade"
+                        onChangeText={setQuantidade}
+                        value={quantidade}
+                        placeholderTextColor={'#fff'}
+                        keyboardType="numeric"
+                    />
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.limparButton} onPress={() => { setId(''); setNome(''); setQuantidade(''); setSelectedId(null); }}>
+                            <Text style={styles.buttonText}>Limpar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.salvarButton} onPress={id ? update : create}>
+                            <Text style={styles.buttonText}>{id ? "Atualizar" : "Salvar"}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.linha}></View>
+                    <TextInput
+                        style={[styles.pesquisaInput, styles.textInputFontPesquisa]}
+                        placeholder="Pesquisar..."
+                        onChangeText={setPesquisa}
+                    />
+                    <FlatList
+                        contentContainerStyle={styles.listContent}
+                        data={produtos}
+                        keyExtractor={(item) => String(item.id)}
+                        renderItem={({ item }) => (
+                            <Produto
+                                data={{
+                                    ...item,
+                                    nome: formatText(item.nome) // Aplica a formatação ao nome do produto
+                                }}
+                                onDelete={() => remove(item.id)}
+                                selected={item.id === selectedId}
+                                onPress={() => handleSelect(item)}
+                            />
+                        )}
+                        scrollEnabled={false}  // Desativa o scroll
+                    />
+                </View>
+            </View>
+        </ScrollView>
     );
 }
 
@@ -334,12 +372,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         width: 330,
         alignSelf: 'center',
-        marginBottom: -10,
+        // marginBottom: -10,
         backgroundColor: '#E4F1E3',
     },
     listContent: {
         // marginTop: 8,
-        gap: 15,
+        gap: 5,
         marginBottom: '10%',
     },
 });

@@ -22,6 +22,7 @@ export function Produto({ data, onDelete, selected, onPress }) {
 
 const styles = StyleSheet.create({
     container: {
+        marginTop: 22,
         backgroundColor: "#CCDDCB",
         padding: 15,
         paddingRight: 20,

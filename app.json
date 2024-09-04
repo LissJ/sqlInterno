@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sqlInterno",
-    "slug": "sqlInterno",
+    "name": "Grocery",
+    "slug": "Grocery",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,8 +17,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#0B3A07"
+      },
+      "package": "com.lissj.Grocery"
     },
     "web": {
       "favicon": "./assets/favicon.png"
